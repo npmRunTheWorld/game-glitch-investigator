@@ -1,5 +1,7 @@
+import json
 import random
 import streamlit as st
+import streamlit.components.v1 as components
 from logic_utils import get_range_for_difficulty, parse_guess, check_guess, update_score
 
 HINT_MESSAGES = {
@@ -48,6 +50,9 @@ if "status" not in st.session_state:
 if "history" not in st.session_state:
     st.session_state.history = []
 
+if "game_id" not in st.session_state:
+    st.session_state.game_id = 0
+
 st.subheader("Make a guess")
 
 st.info(
@@ -55,19 +60,25 @@ st.info(
     f"Attempts left: {attempt_limit - st.session_state.attempts}"
 )
 
-with st.expander("Developer Debug Info"):
-    st.write("Secret:", st.session_state.secret)
-    st.write("Attempts:", st.session_state.attempts)
-    st.write("Score:", st.session_state.score)
-    st.write("Difficulty:", difficulty)
-    st.write("History:", st.session_state.history)
+_debug_state = {
+    "secret": st.session_state.secret,
+    "attempts": st.session_state.attempts,
+    "score": st.session_state.score,
+    "difficulty": difficulty,
+    "status": st.session_state.status,
+    "history": st.session_state.history,
+}
+components.html(
+    f"<script>console.log('[DEBUG] Game State:', {json.dumps(_debug_state)});</script>",
+    height=0,
+)
 
 show_hint = st.checkbox("Show hint", value=True)
 
 with st.form("guess_form"):
     raw_guess = st.text_input(
         "Enter your guess:",
-        key=f"guess_input_{difficulty}"
+        key=f"guess_input_{difficulty}_{st.session_state.game_id}"
     )
     submit = st.form_submit_button("Submit Guess 🚀")
 
@@ -77,6 +88,7 @@ if new_game:
     st.session_state.attempts = 0
     st.session_state.score = 0
     st.session_state.status = "playing"
+    st.session_state.game_id += 1
     st.session_state.history = []
     st.session_state.secret = random.randint(low, high)
     st.success("New game started.")
