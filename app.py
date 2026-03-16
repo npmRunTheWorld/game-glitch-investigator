@@ -1,3 +1,4 @@
+import pprint
 import random
 import streamlit as st
 from logic_utils import get_range_for_difficulty, parse_guess, check_guess, update_score
@@ -58,12 +59,15 @@ st.info(
     f"Attempts left: {attempt_limit - st.session_state.attempts}"
 )
 
-with st.expander("Developer Debug Info"):
-    st.write("Secret:", st.session_state.secret)
-    st.write("Attempts:", st.session_state.attempts)
-    st.write("Score:", st.session_state.score)
-    st.write("Difficulty:", difficulty)
-    st.write("History:", st.session_state.history)
+print("\n[DEBUG] Game State:")
+pprint.pprint({
+    "secret": st.session_state.secret,
+    "attempts": st.session_state.attempts,
+    "score": st.session_state.score,
+    "difficulty": difficulty,
+    "status": st.session_state.status,
+    "history": st.session_state.history,
+})
 
 show_hint = st.checkbox("Show hint", value=True)
 
