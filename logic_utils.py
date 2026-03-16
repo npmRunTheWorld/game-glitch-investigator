@@ -51,21 +51,24 @@ def guess_volatility(attempts_used: int, attempt_limit: int, elapsed: float) -> 
     """
     Guess Volatility (GV) bonus. Rewards early, fast correct guesses.
 
-    - Attempt component (0–150): full at guess 1, linear drop to 0 at last guess.
-    - Time component (0–50): gentle decay over 5 minutes (300s).
+    - Attempts 1–4: gentle linear decay (1.0 → 0.76), stays generous.
+    - Attempt 5+: exponential crush — GV collapses to near zero.
+    - Time component (0–100): decays over 2 minutes (120s).
     - At the final attempt the bonus is always 0.
 
     Examples (limit=8):
-      Attempt 1,  5s → ~199   Attempt 2, 10s → ~176
-      Attempt 4, 30s → ~109   Attempt 7, 60s →  ~61   Attempt 8 →    0
+      Attempt 1,  5s → ~495   Attempt 2, 15s → ~455
+      Attempt 3, 30s → ~411   Attempt 4, 45s → ~366
+      Attempt 5, 60s → ~110   Attempt 6, 90s →  ~40   Attempt 8 → 0
     """
     if attempts_used >= attempt_limit:
         return 0
-    # Linear drop: first guess = 1.0, last-1 guess approaches 0
-    attempt_factor = 1.0 - (attempts_used - 1) / max(attempt_limit - 1, 1)
-    # Gentle time decay — meaningful only after 5 minutes
-    time_bonus = max(0, int(50 * max(0.0, 1.0 - elapsed / 300.0)))
-    return int(150 * attempt_factor) + time_bonus
+    # Smooth power curve: high reward early, gradual decay, ~40 pts at last-1 attempt
+    remaining = 1.0 - (attempts_used - 1) / max(attempt_limit - 1, 1)
+    attempt_factor = remaining ** 1.2
+    # Time bonus decays over 2 minutes
+    time_bonus = max(0, int(100 * max(0.0, 1.0 - elapsed / 120.0)))
+    return int(400 * attempt_factor) + time_bonus
 
 
 def update_score(current_score: int, outcome: str, penalty: int):
