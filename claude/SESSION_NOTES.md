@@ -1,4 +1,4 @@
-# Session Notes — 2026-03-16 (Session 2)
+# Session Notes — 2026-03-16 (Session 3)
 
 ## What We Accomplished
 
@@ -34,10 +34,32 @@ All UI modernization work completed and pushed to `feature/ui-modernization`.
 
 ---
 
+---
+
+## Session 3 — 2026-03-16
+
+### What We Accomplished
+
+Added two live annotation labels to the Altair score projection chart (`app.py`, +49 lines):
+
+| Change | Details |
+|--------|---------|
+| **GV label on Win ▲ tip** | `+{gv_now} GV` text mark in matching green/orange/red color |
+| **Live GV chart update via JS** | `tick()` now queries `.vega-embed svg text` nodes, finds the "GV" label, and rewrites content + fill color every second |
+| **Loss score label on Lose ▼ tip** | Red `{lose_score} pts` text mark below the lose projection endpoint |
+
+### Files Changed
+| File | +Lines | -Lines |
+|------|--------|--------|
+| `app.py` | 49 | 0 |
+
+---
+
 ## Next Steps
 
-1. Open PRs for the 9 Session 1 branches → `main`
-2. Install `gh` CLI (`sudo apt install gh` or `brew install gh`) to automate PR creation
-3. Fill out `reflection.md` sections 2–4
-4. Fix DEP-01 in `requirements.txt`
-5. Final manual smoke test across all 3 difficulty modes
+1. Commit this session's chart annotation changes
+2. Open PR `feature/ui-modernization` → `main`
+3. Open PRs for the 9 Session 1 branches → `main`
+4. Fill out `reflection.md` sections 2–4
+5. Fix DEP-01 in `requirements.txt`
+6. Final manual smoke test across all 3 difficulty modes
