@@ -25,7 +25,11 @@ Answer each question in 3 to 5 sentences. Be specific and honest about what actu
 - Give one example of an AI suggestion that was incorrect or misleading (including what the AI suggested and how you verified the result).
 
 
-1. I allowed for 3 sub agents to spawn one would be a PM with goals for finding bugs and notifying the developer agent. The developer agent would then fix it and the QA agent would check the work
+1. I used both claude, and chatgpt. Where chatgpt was to ask common questions. While the calude agents did the actual work on the repo
+
+2. I allowed for 3 sub agents to spawn one would be a PM with goals for finding bugs and notifying the developer agent. The developer agent would then fix it and the QA agent would check the work
+
+3. I introduced additonal claude.md instructions which ensured the quality of code was upheld. Through automation and manual intervention upon each feature, refactor, or bug fix completion. Where the human user would be able to go and manually see the changes in local host as well as in editor before any automatic push and pr creation on that particular branch
 
 ---
 
@@ -36,7 +40,12 @@ Answer each question in 3 to 5 sentences. Be specific and honest about what actu
   and what it showed you about your code.
 - Did AI help you design or understand any tests? How?
 
-1. Yes the goal is for the Agent QA to write these tests
+1. Yes the goal is for the Agent QA to write these tests that the developer agen would complete. 
+
+2. Test example: test_guess_too_high calls check_guess(60, 50) and asserts "Too High", before the fix,
+  logic_utils raised NotImplementedError. After implementing it, the test passed.
+  
+3. The QA agent defined what check_guess should return (plain string vs tuple), which shaped the exact API we implemented in logic_utils.py
 
 ---
 
@@ -46,6 +55,16 @@ Answer each question in 3 to 5 sentences. Be specific and honest about what actu
 - In your own words, explain why the secret number kept changing in the original app.
 - How would you explain Streamlit "reruns" and session state to a friend who has never used Streamlit?
 - What change did you make that finally gave the game a stable secret number?
+
+
+  1. Why the secret kept changing: Every time Streamlit reruns the script (on event functions like on button click, input, etc.),
+  random.randint() gets called again. Ultimately gnerating a new secret each time unless protected by if "secret" not in st.session_state
+  
+  2. Streamlit re-runs the entire Python file from top to bottom every time a user
+  interacts with anything. Session_state is a dictionary that survives ensuring we have persisted states
+  
+  3. The stabalization was done through Wrapping secret = random.randint(low, high) inside if "secret" not in st.session_state —
+   so it only runs once on first load, not on every rerun.
 
 ---
 
@@ -59,6 +78,8 @@ Answer each question in 3 to 5 sentences. Be specific and honest about what actu
 
 1. Definately start with plan mode to get everything organized and mission planned.
 2. Create defiend /configs with Claude.md allowing it to understand the global context and repeatable process
+
 3. Save and use ephimeral contexts from SESSION_NOTES or CHANGELOG.md files.
+
 4. Having some sort of sub agent or alternate agent which would help with Testing the code and summarize changes 
 

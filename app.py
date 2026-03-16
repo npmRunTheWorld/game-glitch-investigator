@@ -142,15 +142,6 @@ console.log('[DEBUG] Game State:', {_dbg});
         gvEl.textContent = '+' + gv;
         gvEl.style.color = gvColor(gv);
       }}
-      // Update the GV label baked into the Vega chart SVG
-      const vegaTexts = doc.querySelectorAll('.vega-embed text');
-      for (const t of vegaTexts) {{
-        if (/^\+\d+ GV$/.test(t.textContent)) {{
-          t.textContent = '+' + gv + ' GV';
-          t.setAttribute('fill', '#2CA02C');
-          break;
-        }}
-      }}
     }}
   }}
 
@@ -260,19 +251,7 @@ with top_main:
             .properties(height=160)
         )
 
-        if st.session_state.status == "playing" and gv_now > 0:
-            gv_label = (
-                alt.Chart(pd.DataFrame({
-                    "attempt": [n + 1],
-                    "score":   [current_score + gv_now],
-                    "text":    [f"+{gv_now} GV"],
-                }))
-                .mark_text(dy=-12, color="#2CA02C", fontWeight="bold", fontSize=11)
-                .encode(x="attempt:Q", y="score:Q", text="text:N")
-            )
-            chart = (base + gv_label).properties(background="transparent").configure_view(strokeOpacity=0)
-        else:
-            chart = base.properties(background="transparent").configure_view(strokeOpacity=0)
+        chart = base.properties(background="transparent").configure_view(strokeOpacity=0)
 
         st.altair_chart(chart, use_container_width=True)
 
@@ -333,7 +312,7 @@ with bot_left:
                 st.rerun()
 
     # New Game button sits below the guess form
-    if st.button("New Game 🔁", use_container_width=True):
+    if st.button("New Game", use_container_width=True):
         for k, v in defaults.items():
             st.session_state[k] = v
         st.session_state.game_id += 1
