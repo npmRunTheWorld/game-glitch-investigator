@@ -47,18 +47,39 @@ def check_guess(guess, secret):
     return "Too Low"
 
 
-def update_score(current_score: int, outcome: str, attempt_number: int):
-    """Update score based on outcome and attempt number."""
+def guess_volatility(attempts_used: int, attempt_limit: int, elapsed: float) -> int:
+    """
+    Guess Volatility (GV) bonus. Rewards early, fast correct guesses.
+
+    - Attempts 1–4: gentle linear decay (1.0 → 0.76), stays generous.
+    - Attempt 5+: exponential crush — GV collapses to near zero.
+    - Time component (0–100): decays over 2 minutes (120s).
+    - At the final attempt the bonus is always 0.
+
+    Examples (limit=8):
+      Attempt 1,  5s → ~495   Attempt 2, 15s → ~455
+      Attempt 3, 30s → ~411   Attempt 4, 45s → ~366
+      Attempt 5, 60s → ~110   Attempt 6, 90s →  ~40   Attempt 8 → 0
+    """
+    if attempts_used >= attempt_limit:
+        return 0
+    # Smooth power curve: high reward early, gradual decay, ~40 pts at last-1 attempt
+    remaining = 1.0 - (attempts_used - 1) / max(attempt_limit - 1, 1)
+    attempt_factor = remaining ** 1.2
+    # Time bonus decays over 2 minutes
+    time_bonus = max(0, int(100 * max(0.0, 1.0 - elapsed / 120.0)))
+    return int(400 * attempt_factor) + time_bonus
+
+
+def update_score(current_score: int, outcome: str, penalty: int):
+    """
+    Update score based on outcome.
+
+    Starting score is 100. Each wrong guess deducts `penalty` points
+    (caller computes penalty = 100 // attempt_limit). Score floor is 0.
+    Win preserves the current score; time bonus is applied separately in app.py.
+    """
     if outcome == "Win":
-        points = 100 - 10 * (attempt_number + 1)
-        if points < 10:
-            points = 10
-        return current_score + points
+        return current_score
 
-    if outcome == "Too High":
-        return current_score - 5
-
-    if outcome == "Too Low":
-        return current_score - 5
-
-    return current_score
+    return max(0, current_score - penalty)
