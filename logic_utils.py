@@ -49,12 +49,23 @@ def check_guess(guess, secret):
 
 def guess_volatility(attempts_used: int, attempt_limit: int, elapsed: float) -> int:
     """
-    Guess Volatility (GV) bonus. Rewards fast, early correct guesses.
-    Max bonus ~200. Approaches 0 at the last attempt or after 120 seconds.
+    Guess Volatility (GV) bonus. Rewards early, fast correct guesses.
+
+    - Attempt component (0–150): full at guess 1, linear drop to 0 at last guess.
+    - Time component (0–50): gentle decay over 5 minutes (300s).
+    - At the final attempt the bonus is always 0.
+
+    Examples (limit=8):
+      Attempt 1,  5s → ~199   Attempt 2, 10s → ~176
+      Attempt 4, 30s → ~109   Attempt 7, 60s →  ~61   Attempt 8 →    0
     """
-    attempt_factor = max(0.0, 1.0 - attempts_used / attempt_limit)
-    time_factor = max(0.0, 1.0 - elapsed / 120.0)
-    return int(200 * attempt_factor * time_factor)
+    if attempts_used >= attempt_limit:
+        return 0
+    # Linear drop: first guess = 1.0, last-1 guess approaches 0
+    attempt_factor = 1.0 - (attempts_used - 1) / max(attempt_limit - 1, 1)
+    # Gentle time decay — meaningful only after 5 minutes
+    time_bonus = max(0, int(50 * max(0.0, 1.0 - elapsed / 300.0)))
+    return int(150 * attempt_factor) + time_bonus
 
 
 def update_score(current_score: int, outcome: str, penalty: int):
