@@ -48,6 +48,9 @@ if "status" not in st.session_state:
 if "history" not in st.session_state:
     st.session_state.history = []
 
+if "game_id" not in st.session_state:
+    st.session_state.game_id = 0
+
 st.subheader("Make a guess")
 
 st.info(
@@ -67,7 +70,7 @@ show_hint = st.checkbox("Show hint", value=True)
 with st.form("guess_form"):
     raw_guess = st.text_input(
         "Enter your guess:",
-        key=f"guess_input_{difficulty}"
+        key=f"guess_input_{difficulty}_{st.session_state.game_id}"
     )
     submit = st.form_submit_button("Submit Guess 🚀")
 
@@ -77,6 +80,7 @@ if new_game:
     st.session_state.attempts = 0
     st.session_state.score = 0
     st.session_state.status = "playing"
+    st.session_state.game_id += 1
     st.session_state.history = []
     st.session_state.secret = random.randint(low, high)
     st.success("New game started.")
