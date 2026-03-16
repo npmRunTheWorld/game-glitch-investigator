@@ -188,6 +188,24 @@ The `except TypeError` block in `check_guess` re-implements comparison logic for
 
 ---
 
+## Hotfixes & Feature Additions
+
+### HOTFIX-01: Guess Input Not Cleared on New Game
+**File:** `app.py`
+**Severity:** Medium
+**Status:** Fixed — `fix/hotfix-new-game-input-reset`
+When the user clicks New Game, the text input retained the previous guess. Fixed by adding a `game_id` counter to session state and including it in the input widget key. Incrementing `game_id` on New Game forces Streamlit to render a fresh empty input.
+
+---
+
+### HOTFIX-02: Debug Info Visible in UI Instead of Browser DevTools Console
+**File:** `app.py`
+**Severity:** Low → Medium (security)
+**Status:** Fixed — `fix/hotfix-new-game-input-reset`
+The `Developer Debug Info` expander exposed the secret number directly in the UI. First fix attempted `print()` / `pprint()` to the server terminal — but this is not visible in the browser's developer tools. Final fix injects a `<script>console.log(...)` via `st.components.v1.html` so the debug state appears as an expandable object in the browser's DevTools console (F12) without being visible to regular players.
+
+---
+
 ## Summary Table
 
 | ID      | Category       | Severity | Description                                          |
@@ -209,3 +227,5 @@ The `except TypeError` block in `check_guess` re-implements comparison logic for
 | ARCH-03 | Architecture   | Medium   | Logic duplicated between app.py and logic_utils.py   |
 | ARCH-04 | Architecture   | Low      | Dead code: string fallback in check_guess            |
 | DEP-01  | Dependencies   | Low      | altair<5 missing lower bound                         |
+| HOTFIX-01 | Hotfix       | Medium   | Guess input not cleared on New Game                  |
+| HOTFIX-02 | Hotfix       | Medium   | Debug info visible in UI, should be in DevTools console |

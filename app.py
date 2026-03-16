@@ -1,6 +1,7 @@
-import pprint
+import json
 import random
 import streamlit as st
+import streamlit.components.v1 as components
 from logic_utils import get_range_for_difficulty, parse_guess, check_guess, update_score
 
 HINT_MESSAGES = {
@@ -59,15 +60,18 @@ st.info(
     f"Attempts left: {attempt_limit - st.session_state.attempts}"
 )
 
-print("\n[DEBUG] Game State:")
-pprint.pprint({
+_debug_state = {
     "secret": st.session_state.secret,
     "attempts": st.session_state.attempts,
     "score": st.session_state.score,
     "difficulty": difficulty,
     "status": st.session_state.status,
     "history": st.session_state.history,
-})
+}
+components.html(
+    f"<script>console.log('[DEBUG] Game State:', {json.dumps(_debug_state)});</script>",
+    height=0,
+)
 
 show_hint = st.checkbox("Show hint", value=True)
 
