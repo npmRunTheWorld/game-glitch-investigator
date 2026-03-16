@@ -25,6 +25,21 @@ BG_TONES = [
     "#140a0a", "#0a1414", "#100a14", "#14140a",
 ]
 
+def gv_color(value: int) -> str:
+    """Return hex color for a GV value (mirrors JS gvColor)."""
+    return "#2CA02C" if value > 50 else ("#FFA500" if value > 20 else "#D62728")
+
+
+def _make_label_chart(attempt: int, score: int, label: str, color: str, dy: int):
+    """Return a single Altair text annotation for the score projection chart."""
+    df = pd.DataFrame({"attempt": [attempt], "score": [score], "label": [label]})
+    return (
+        alt.Chart(df)
+        .mark_text(align="left", dx=6, dy=dy, fontSize=11, fontWeight="bold", color=color)
+        .encode(x=alt.X("attempt:Q"), y=alt.Y("score:Q"), text=alt.Text("label:N"))
+    )
+
+
 GV_TOOLTIP = (
     "Guess Volatility (GV) — bonus points awarded for winning. "
     "Bigger reward the earlier and faster you guess correctly. "
@@ -142,17 +157,24 @@ console.log('[DEBUG] Game State:', {_dbg});
         gvEl.textContent = '+' + gv;
         gvEl.style.color = gvColor(gv);
       }}
-      // Update the GV label baked into the Vega chart SVG
-      const vegaTexts = doc.querySelectorAll('.vega-embed text');
-      for (const t of vegaTexts) {{
-        if (/^\+\d+ GV$/.test(t.textContent)) {{
-          t.textContent = '+' + gv + ' GV';
-          t.setAttribute('fill', '#2CA02C');
-          break;
+      // Update GV label inside the Altair chart SVG (cache after first find)
+      if (!gvChartEl) {{
+        const svgTexts = doc.querySelectorAll('.vega-embed svg text');
+        for (const el of svgTexts) {{
+          if (el.textContent && el.textContent.includes('GV')) {{
+            gvChartEl = el;
+            break;
+          }}
         }}
+      }}
+      if (gvChartEl) {{
+        gvChartEl.textContent = '+' + gv + ' GV';
+        gvChartEl.setAttribute('fill', gvColor(gv));
       }}
     }}
   }}
+
+  let gvChartEl = null;  // cached SVG text node for GV label
 
   let started = false;
   function start() {{
@@ -197,12 +219,12 @@ with top_stats:
 
 with top_main:
     # GV info box
-    gv_color = "#2CA02C" if gv_now > 50 else ("#FFA500" if gv_now > 20 else "#D62728")
+    gv_color_val = gv_color(gv_now)
     st.markdown(
         f'<div title="{GV_TOOLTIP}" style="background:rgba(255,255,255,0.07);'
         f'border-radius:8px;padding:8px 12px;cursor:help;margin-bottom:8px;">'
         f'<span style="font-size:0.75rem;color:#aaa;">Guess Volatility (?)</span><br>'
-        f'<span id="live-gv-value" style="font-size:1.4rem;font-weight:700;color:{gv_color};">+{gv_now}</span>'
+        f'<span id="live-gv-value" style="font-size:1.4rem;font-weight:700;color:{gv_color_val};">+{gv_now}</span>'
         f'<span style="font-size:0.8rem;color:#aaa;"> pts if you win now</span>'
         f'</div>',
         unsafe_allow_html=True,
@@ -260,19 +282,15 @@ with top_main:
             .properties(height=160)
         )
 
-        if st.session_state.status == "playing" and gv_now > 0:
-            gv_label = (
-                alt.Chart(pd.DataFrame({
-                    "attempt": [n + 1],
-                    "score":   [current_score + gv_now],
-                    "text":    [f"+{gv_now} GV"],
-                }))
-                .mark_text(dy=-12, color="#2CA02C", fontWeight="bold", fontSize=11)
-                .encode(x="attempt:Q", y="score:Q", text="text:N")
+        # GV label at the Win ▲ tip + score label at Lose ▼ tip
+        if st.session_state.status == "playing":
+            base = (
+                base
+                + _make_label_chart(n + 1, win_score,  f"+{gv_now} GV",     gv_color(gv_now), dy=-6)
+                + _make_label_chart(n + 1, lose_score, f"{lose_score} pts",  "#D62728",        dy=8)
             )
-            chart = (base + gv_label).properties(background="transparent").configure_view(strokeOpacity=0)
-        else:
-            chart = base.properties(background="transparent").configure_view(strokeOpacity=0)
+
+        chart = base.properties(background="transparent").configure_view(strokeOpacity=0)
 
         st.altair_chart(chart, use_container_width=True)
 
@@ -333,7 +351,7 @@ with bot_left:
                 st.rerun()
 
     # New Game button sits below the guess form
-    if st.button("New Game 🔁", use_container_width=True):
+    if st.button("New Game", use_container_width=True):
         for k, v in defaults.items():
             st.session_state[k] = v
         st.session_state.game_id += 1
